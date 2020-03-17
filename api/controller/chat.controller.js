@@ -23,7 +23,22 @@ const listMessage = (req, res, next) => {
   }))
 }
 
+const deleteMessage = (req, res, next) => {
+  MessageSchema.findOneAndDelete({_id: req.params.id}).then(data => {
+    if (!data) {
+      res.status(401).json({
+        message: "data not found"
+      })
+    }
+    res.status(201).json({
+      message: "data deleted",
+      data
+    })
+  })
+}
+
 module.exports = {
   addMessage,
-  listMessage
+  listMessage,
+  deleteMessage
 }
