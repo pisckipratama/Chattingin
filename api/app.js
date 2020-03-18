@@ -1,42 +1,41 @@
-const express = require('express');
-const path = require('path');
-const bodyParser = require('body-parser');
-const logger = require('morgan');
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
 const mongoose = require('mongoose');
-const cors = require('cors');
+var cors = require('cors');
 
-const indexRouter = require('./routes/index');
-const chatRouter = require('./routes/chat');
+var indexRouter = require('./routes/index');
+var chatsRouter = require('./routes/chat');
 
-const app = express();
+var app = express();
 
-app.use(logger('dev'));
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors());
-
-// database config
-mongoose.Promise = global.Promise;
-mongoose.connect('mongodb+srv://pisckipy:nopassword@reviewapi-a48cn.mongodb.net/test?retryWrites=true&w=majority', {
+mongoose.connect('mongodb://localhost:27017/chat', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useFindAndModify: true
-})
-.then(() => console.log('successfully connected with mongodb.'))
-.catch(err => console.error(err))
+  useFindAndModify: false
+});
 
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({
+  extended: false
+}));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors())
+
+app.use('/api/chats', chatsRouter);
 app.use('/', indexRouter);
-app.use('/api', chatRouter);
 
-const debug = require('debug')('server-chat:server');
-const http = require('http');
+var debug = require('debug')('react-chat:api');
+var http = require('http');
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3023');
+var port = normalizePort(process.env.PORT || '3001');
 app.set('port', port);
 
 /**
@@ -44,17 +43,19 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-const io = require('socket.io')(server);
 
-io.on('connection', (socket) => {
+var io = require('socket.io')(server);
+
+io.on('connection', function (socket) {
 
   socket.on('add chat', (chatData = {}) => {
     socket.broadcast.emit('load chat', chatData);
-  })
+  });
 
   socket.on('delete chat', id => {
     socket.broadcast.emit('delete chat', id);
   })
+
 })
 
 /**
@@ -124,4 +125,3 @@ function onListening() {
     'port ' + addr.port;
   debug('Listening on ' + bind);
 }
-
