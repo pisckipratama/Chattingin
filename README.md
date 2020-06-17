@@ -1,2 +1,2 @@
-# react-chat
-Create simple chat application using ReactJS
+# Chattingin
+Simple Chat APP using MERN Stack and Socket.io
